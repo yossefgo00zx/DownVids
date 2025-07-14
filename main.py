@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS
 import yt_dlp
 import tempfile
 
 app = Flask(__name__)
+CORS(app)  # ✅ أضف هذا السطر بعد إنشاء Flask app
 
 @app.route('/api/download', methods=['POST'])
 def download():
