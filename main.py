@@ -1,9 +1,8 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask import Flask, request, jsonify, send_file
 import yt_dlp
+import tempfile
 
 app = Flask(__name__)
-CORS(app)
 
 @app.route('/api/download', methods=['POST'])
 def download():
@@ -14,22 +13,17 @@ def download():
         return jsonify({'error': 'رابط غير صالح'}), 400
 
     try:
-        ydl_opts = {
-            'quiet': True,
-            'skip_download': True,
-            'format': 'best',
-            'forcejson': True,
-        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ydl_opts = {
+                'outtmpl': f'{tmpdir}/%(title)s.%(ext)s',
+                'format': 'best',
+            }
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url, download=False)
-            return jsonify({
-                'title': info.get('title'),
-                'url': info['url'],
-                'ext': info.get('ext'),
-                'thumbnail': info.get('thumbnail'),
-                'duration': info.get('duration'),
-            })
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(video_url, download=True)
+                filename = ydl.prepare_filename(info)
+
+            return send_file(filename, as_attachment=True)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
