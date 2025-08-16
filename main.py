@@ -1,14 +1,21 @@
 from flask import Flask, request, jsonify, send_file
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 import yt_dlp
 import tempfile
 import os
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  # ✅ تفعيل CORS لكل المسارات
 
-@app.route('/api/download', methods=['POST'])
+# ✅ تفعيل CORS بشكل كامل
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+
+@app.route('/api/download', methods=['POST', 'OPTIONS'])
+@cross_origin(origin='*', headers=['Content-Type', 'Authorization'])
 def download():
+    if request.method == 'OPTIONS':
+        # رد سريع على طلب الـ preflight
+        return '', 200
+
     data = request.json
     video_url = data.get('url')
 
@@ -35,5 +42,5 @@ def home():
     return 'yt-dlp backend is running!'
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 8080))  # ✅ استخدم بورت Railway
+    port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
