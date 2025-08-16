@@ -2,9 +2,10 @@ from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import yt_dlp
 import tempfile
+import os
 
 app = Flask(__name__)
-CORS(app)  # ✅ أضف هذا السطر بعد إنشاء Flask app
+CORS(app, resources={r"/*": {"origins": "*"}})  # ✅ تفعيل CORS لكل المسارات
 
 @app.route('/api/download', methods=['POST'])
 def download():
@@ -34,4 +35,5 @@ def home():
     return 'yt-dlp backend is running!'
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=81)
+    port = int(os.environ.get("PORT", 8080))  # ✅ استخدم بورت Railway
+    app.run(host='0.0.0.0', port=port)
